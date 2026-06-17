@@ -1,28 +1,4 @@
-"""
-================================================================================
-🧠 Student Health Monitoring and Early Detection
---------------------------------------------------------------------------------
-app.py  -  Streamlit application
 
-A responsive, healthcare-themed web app that predicts a student's depression
-risk from demographic, academic, lifestyle, and psychological factors using a
-trained Support Vector Machine (SVM).
-
-The app is fully data-driven: every input widget is generated automatically
-from `feature_metadata.json`, so it always matches the columns the model was
-trained on.  The preprocessing pipeline (label encoding -> scaling -> SVM) is
-applied in exactly the same order as during training.
-
-Required artifacts (produced by `train_model.py`):
-    model.pkl              -> trained SVC (probability=True)
-    scaler.pkl             -> fitted StandardScaler
-    encoders.pkl           -> dict {column_name: fitted LabelEncoder}
-    feature_metadata.json  -> input definitions (type / options / ranges)
-
-Run locally:
-    streamlit run app.py
-================================================================================
-"""
 
 import json
 from pathlib import Path
@@ -51,9 +27,11 @@ METADATA_PATH = BASE_DIR / "feature_metadata.json"
 # Friendly labels & help text (falls back gracefully for unknown columns)
 # --------------------------------------------------------------------------- #
 FRIENDLY_LABELS = {
-    "Have you ever had suicidal thoughts ?": "Have you ever had suicidal thoughts?",
+    # Reworded (gentler) phrasing — these still map to the exact model inputs.
+    "Have you ever had suicidal thoughts ?": "Have you recently felt persistent hopelessness or distressing thoughts?",
+    "Family History of Mental Illness": "Has anyone in your family experienced mental-health difficulties?",
     "Work/Study Hours": "Work / Study Hours (per day)",
-    "CGPA": "CGPA (0 - 10)",
+    "CGPA": "CGPA (0 - 4 scale)",
     "Academic Pressure": "Academic Pressure (0 = none, 5 = extreme)",
     "Study Satisfaction": "Study Satisfaction (0 = low, 5 = high)",
     "Financial Stress": "Financial Stress (1 = low, 5 = high)",
@@ -70,10 +48,53 @@ FEATURE_GROUPS = [
     ),
     ("🌙 Lifestyle", ["Sleep Duration", "Dietary Habits", "Financial Stress"]),
     (
-        "🧠 Psychological & Family History",
+        "🧠 Emotional Wellbeing & Family Background",
         ["Have you ever had suicidal thoughts ?", "Family History of Mental Illness"],
     ),
 ]
+
+# --------------------------------------------------------------------------- #
+# Presentation-only conversions (the model/metadata are NOT changed)
+# --------------------------------------------------------------------------- #
+# CGPA is trained/stored on a 0-10 scale but shown to users on a 0-4 scale.
+# We convert the user's 0-4 value back to 0-10 before feeding the model.
+CGPA_SCALE_FACTOR = 2.5  # 10 / 4
+CGPA_DISPLAY_MAX = 4.0
+
+# Degree is shown as a full programme name; the model was trained on the
+# original abbreviations, so we map back to the abbreviation before predicting.
+DEGREE_FULL_NAMES = {
+    "B.Arch": "Bachelor of Architecture (B.Arch)",
+    "B.Com": "Bachelor of Commerce (B.Com)",
+    "B.Ed": "Bachelor of Education (B.Ed)",
+    "B.Pharm": "Bachelor of Pharmacy (B.Pharm)",
+    "B.Tech": "Bachelor of Technology (B.Tech)",
+    "BA": "Bachelor of Arts (BA)",
+    "BBA": "Bachelor of Business Administration (BBA)",
+    "BCA": "Bachelor of Computer Applications (BCA)",
+    "BE": "Bachelor of Engineering (BE)",
+    "BHM": "Bachelor of Hotel Management (BHM)",
+    "BSc": "Bachelor of Science (BSc)",
+    "Class 12": "Class 12 (High School)",
+    "LLB": "Bachelor of Laws (LLB)",
+    "LLM": "Master of Laws (LLM)",
+    "M.Com": "Master of Commerce (M.Com)",
+    "M.Ed": "Master of Education (M.Ed)",
+    "M.Pharm": "Master of Pharmacy (M.Pharm)",
+    "M.Tech": "Master of Technology (M.Tech)",
+    "MA": "Master of Arts (MA)",
+    "MBA": "Master of Business Administration (MBA)",
+    "MBBS": "Bachelor of Medicine and Bachelor of Surgery (MBBS)",
+    "MCA": "Master of Computer Applications (MCA)",
+    "MD": "Doctor of Medicine (MD)",
+    "ME": "Master of Engineering (ME)",
+    "MHM": "Master of Hotel Management (MHM)",
+    "MSc": "Master of Science (MSc)",
+    "Others": "Others",
+    "PhD": "Doctor of Philosophy (PhD)",
+}
+# Reverse lookup: full name -> original abbreviation used by the encoder.
+DEGREE_FULL_TO_ABBR = {full: abbr for abbr, full in DEGREE_FULL_NAMES.items()}
 
 
 # --------------------------------------------------------------------------- #
@@ -185,14 +206,36 @@ def render_feature_input(feature: dict):
 
     if feature["type"] == "categorical":
         options = feature["options"]
+        # Degree -> dropdown of full programme names (mapped back when predicting).
+        if name == "Degree":
+            display_options = [DEGREE_FULL_NAMES.get(o, o) for o in options]
+            default_index = (
+                options.index(feature["default"])
+                if feature["default"] in options
+                else 0
+            )
+            return st.selectbox(label, display_options, index=default_index, key=name)
+
         default_index = (
             options.index(feature["default"]) if feature["default"] in options else 0
         )
         return st.selectbox(label, options, index=default_index, key=name)
 
-    # Numeric feature -> slider (touch-friendly, no keyboard needed on mobile)
+    # CGPA -> number box on a 0-4 scale (converted to the model's 0-10 later).
+    if name == "CGPA":
+        return st.number_input(
+            label,
+            min_value=0.0,
+            max_value=CGPA_DISPLAY_MAX,
+            value=round(float(feature["default"]) / CGPA_SCALE_FACTOR, 2),
+            step=0.01,
+            format="%.2f",
+            key=name,
+        )
+
+    # Numeric feature -> number input box (type a value or use the - / + steppers).
     if feature.get("is_integer"):
-        return st.slider(
+        return st.number_input(
             label,
             min_value=int(feature["min"]),
             max_value=int(feature["max"]),
@@ -200,7 +243,7 @@ def render_feature_input(feature: dict):
             step=1,
             key=name,
         )
-    return st.slider(
+    return st.number_input(
         label,
         min_value=float(feature["min"]),
         max_value=float(feature["max"]),
@@ -252,6 +295,14 @@ def predict(user_inputs, model, scaler, encoders, metadata):
     row = {}
     for col in feature_order:
         value = user_inputs[col]
+
+        # CGPA is entered on a 0-4 scale; the model was trained on a 0-10 scale.
+        if col == "CGPA":
+            value = float(value) * CGPA_SCALE_FACTOR
+        # Degree is shown as a full name; convert back to the trained abbreviation.
+        elif col == "Degree":
+            value = DEGREE_FULL_TO_ABBR.get(value, value)
+
         if col in encoders:
             # Same label encoding learned at training time.
             value = int(encoders[col].transform([str(value)])[0])
