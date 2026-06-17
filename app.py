@@ -359,23 +359,6 @@ def show_result(prediction: int, risk_prob, user_inputs: dict):
             "risk of depression."
         )
 
-    # --------------------------- Input summary ---------------------------- #
-    st.markdown("### 📋 Input Summary")
-    summary_rows = []
-    for col, val in user_inputs.items():
-        # Show integers cleanly (e.g. 5 instead of 5.0).
-        if isinstance(val, float) and val.is_integer():
-            val = int(val)
-        summary_rows.append({"Factor": label_for(col), "Your Input": str(val)})
-    summary_df = pd.DataFrame(summary_rows)
-    st.dataframe(summary_df, use_container_width=True, hide_index=True)
-
-    st.info(
-        "ℹ️ **Disclaimer:** This tool provides a machine-learning estimate for "
-        "educational and early-screening purposes only. It is **not** a medical "
-        "diagnosis. Please consult a qualified mental-health professional for any "
-        "concerns."
-    )
 
 
 # --------------------------------------------------------------------------- #
