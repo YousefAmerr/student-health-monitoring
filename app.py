@@ -48,7 +48,7 @@ FEATURE_GROUPS = [
     ),
     ("🌙 Lifestyle", ["Sleep Duration", "Dietary Habits", "Financial Stress"]),
     (
-        "🧠 Emotional Wellbeing & Family Background",
+        "Emotional Wellbeing & Family Background",
         ["Have you ever had suicidal thoughts ?", "Family History of Mental Illness"],
     ),
 ]
@@ -371,7 +371,7 @@ def main() -> None:
     st.markdown(
         """
         <div class="app-header">
-            <h1>🧠 Student Health Monitoring and Early Detection</h1>
+            <h1>Student Health Monitoring and Early Detection</h1>
             <p>This application predicts the likelihood of depression risk among
             students based on demographic, academic, lifestyle, and psychological
             factors, using a Support Vector Machine (SVM) model.</p>
