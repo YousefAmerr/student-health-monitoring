@@ -1,0 +1,158 @@
+{
+  "target": "Depression",
+  "feature_order": [
+    "Gender",
+    "Age",
+    "Academic Pressure",
+    "CGPA",
+    "Study Satisfaction",
+    "Sleep Duration",
+    "Dietary Habits",
+    "Degree",
+    "Have you ever had suicidal thoughts ?",
+    "Work/Study Hours",
+    "Financial Stress",
+    "Family History of Mental Illness"
+  ],
+  "features": [
+    {
+      "name": "Gender",
+      "type": "categorical",
+      "options": [
+        "Female",
+        "Male"
+      ],
+      "default": "Female"
+    },
+    {
+      "name": "Age",
+      "type": "numeric",
+      "min": 18.0,
+      "max": 59.0,
+      "default": 25.0,
+      "is_integer": true,
+      "step": 1.0
+    },
+    {
+      "name": "Academic Pressure",
+      "type": "numeric",
+      "min": 0.0,
+      "max": 5.0,
+      "default": 3.0,
+      "is_integer": true,
+      "step": 1.0
+    },
+    {
+      "name": "CGPA",
+      "type": "numeric",
+      "min": 0.0,
+      "max": 10.0,
+      "default": 7.77,
+      "is_integer": false,
+      "step": 0.01
+    },
+    {
+      "name": "Study Satisfaction",
+      "type": "numeric",
+      "min": 0.0,
+      "max": 5.0,
+      "default": 3.0,
+      "is_integer": true,
+      "step": 1.0
+    },
+    {
+      "name": "Sleep Duration",
+      "type": "categorical",
+      "options": [
+        "5-6 hours",
+        "7-8 hours",
+        "Less than 5 hours",
+        "More than 8 hours",
+        "Others"
+      ],
+      "default": "5-6 hours"
+    },
+    {
+      "name": "Dietary Habits",
+      "type": "categorical",
+      "options": [
+        "Healthy",
+        "Moderate",
+        "Others",
+        "Unhealthy"
+      ],
+      "default": "Healthy"
+    },
+    {
+      "name": "Degree",
+      "type": "categorical",
+      "options": [
+        "B.Arch",
+        "B.Com",
+        "B.Ed",
+        "B.Pharm",
+        "B.Tech",
+        "BA",
+        "BBA",
+        "BCA",
+        "BE",
+        "BHM",
+        "BSc",
+        "Class 12",
+        "LLB",
+        "LLM",
+        "M.Com",
+        "M.Ed",
+        "M.Pharm",
+        "M.Tech",
+        "MA",
+        "MBA",
+        "MBBS",
+        "MCA",
+        "MD",
+        "ME",
+        "MHM",
+        "MSc",
+        "Others",
+        "PhD"
+      ],
+      "default": "B.Arch"
+    },
+    {
+      "name": "Have you ever had suicidal thoughts ?",
+      "type": "categorical",
+      "options": [
+        "No",
+        "Yes"
+      ],
+      "default": "No"
+    },
+    {
+      "name": "Work/Study Hours",
+      "type": "numeric",
+      "min": 0.0,
+      "max": 12.0,
+      "default": 8.0,
+      "is_integer": true,
+      "step": 1.0
+    },
+    {
+      "name": "Financial Stress",
+      "type": "numeric",
+      "min": 1.0,
+      "max": 5.0,
+      "default": 3.0,
+      "is_integer": true,
+      "step": 1.0
+    },
+    {
+      "name": "Family History of Mental Illness",
+      "type": "categorical",
+      "options": [
+        "No",
+        "Yes"
+      ],
+      "default": "No"
+    }
+  ]
+}

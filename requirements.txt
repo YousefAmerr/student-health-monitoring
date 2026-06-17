@@ -1,0 +1,8 @@
+# Pinned to the versions used to train and pickle the model so that the
+# artifacts (model.pkl / scaler.pkl / encoders.pkl) load identically on
+# Streamlit Cloud. Update these only if you re-run train_model.py.
+streamlit==1.40.2
+scikit-learn==1.7.2
+pandas==2.2.3
+numpy==2.2.0
+joblib==1.5.2
